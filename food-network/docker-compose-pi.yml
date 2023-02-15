@@ -1,0 +1,304 @@
+#
+# Copyright IBM Corp All Rights Reserved
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '2'
+
+networks:
+  basic:
+
+services:
+  orderer.com:
+    container_name: orderer.com
+    image: ptunstad/fabric-orderer:arm64-1.4.1
+    environment:
+      - FABRIC_LOGGING_SPEC=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
+
+
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+    command: orderer
+    ports:
+      - 7050:7050
+    volumes:
+        - ./config/:/etc/hyperledger/configtx
+        - ./crypto-config/ordererOrganizations/orderer.com/orderers/orderer.orderer.com/:/etc/hyperledger/msp/orderer
+        - ./crypto-config/peerOrganizations/man1.com/peers/peer0.man1.com/:/etc/hyperledger/msp/peerMan1
+        - ./crypto-config/peerOrganizations/dis1.com/peers/peer0.dis1.com/:/etc/hyperledger/msp/peerDis1
+        - ./crypto-config/peerOrganizations/ret1.com/peers/peer0.ret1.com/:/etc/hyperledger/msp/peerRet1
+        - ./crypto-config/peerOrganizations/con1.com/peers/peer0.con1.com/:/etc/hyperledger/msp/peerCon1
+    networks:
+      - basic
+
+  peer0.man1.com:
+    container_name: peer0.man1.com
+    image: ptunstad/fabric-peer:arm64-1.4.1
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.man1.com
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_ADDRESSAUTODETECT=true
+      - CORE_CHAINCODE_LOGGING_LEVEL=info
+      - CORE_PEER_LOCALMSPID=Man1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer
+      - CORE_PEER_ADDRESS=peer0.man1.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.man1.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.man1.com:7051
+
+      - CORE_CHAINCODE_STARTUPTIMEOUT=3600s
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+
+      # # the following setting starts chaincode containers on the same
+      # # bridge network as the peers
+      # # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    # command: peer node start --peer-chaincodedev=true
+    ports:
+      - 7051:7051
+      - 7053:7053
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/man1.com/peers/peer0.man1.com/msp:/etc/hyperledger/msp/peer
+        - ./crypto-config/peerOrganizations/man1.com/users:/etc/hyperledger/msp/users
+        - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - orderer.com
+      - couchdb
+    networks:
+      - basic
+
+  peer0.dis1.com:
+    container_name: peer0.dis1.com
+    image: ptunstad/fabric-peer:arm64-1.4.1
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.dis1.com
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_DISCOVERY_ROOTNODE=peer0.man1.com:7051
+      - CORE_PEER_ADDRESSAUTODETECT=true
+      - CORE_CHAINCODE_LOGGING_LEVEL=info
+      - CORE_PEER_LOCALMSPID=Dis1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+      - CORE_PEER_ADDRESS=peer0.dis1.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.dis1.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.dis1.com:7051
+
+      - CORE_CHAINCODE_STARTUPTIMEOUT=3600s
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+
+      # # the following setting starts chaincode containers on the same
+      # # bridge network as the peers
+      # # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    # command: peer node start --peer-chaincodedev=true
+    ports:
+      - 8051:7051
+      - 8053:7053
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/dis1.com/peers/peer0.dis1.com/msp:/etc/hyperledger/msp/peer
+        - ./crypto-config/peerOrganizations/dis1.com/users:/etc/hyperledger/msp/users
+        - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - orderer.com
+      - couchdb
+    networks:
+      - basic
+
+  peer0.ret1.com:
+    container_name: peer0.ret1.com
+    image: ptunstad/fabric-peer:arm64-1.4.1
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.ret1.com
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_DISCOVERY_ROOTNODE=peer0.man1.com:7051
+      - CORE_PEER_ADDRESSAUTODETECT=true
+      - CORE_CHAINCODE_LOGGING_LEVEL=info
+      - CORE_PEER_LOCALMSPID=Ret1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+      - CORE_PEER_ADDRESS=peer0.ret1.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.ret1.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ret1.com:7051
+
+      - CORE_CHAINCODE_STARTUPTIMEOUT=3600s
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+
+      # # the following setting starts chaincode containers on the same
+      # # bridge network as the peers
+      # # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    # command: peer node start --peer-chaincodedev=true
+    ports:
+      - 9051:7051
+      - 9053:7053
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/ret1.com/peers/peer0.ret1.com/msp:/etc/hyperledger/msp/peer
+        - ./crypto-config/peerOrganizations/ret1.com/users:/etc/hyperledger/msp/users
+        - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - orderer.com
+      - couchdb
+    networks:
+      - basic
+
+  peer0.con1.com:
+    container_name: peer0.con1.com
+    image: ptunstad/fabric-peer:arm64-1.4.1
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.con1.com
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_DISCOVERY_ROOTNODE=peer0.man1.com:7051
+      - CORE_PEER_ADDRESSAUTODETECT=true
+      - CORE_CHAINCODE_LOGGING_LEVEL=info
+      - CORE_PEER_LOCALMSPID=Con1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+      - CORE_PEER_ADDRESS=peer0.con1.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.con1.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.con1.com:7051
+
+
+      - CORE_CHAINCODE_STARTUPTIMEOUT=3600s
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+
+      # # the following setting starts chaincode containers on the same
+      # # bridge network as the peers
+      # # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    # command: peer node start --peer-chaincodedev=true
+    ports:
+      - 10051:7051
+      - 10053:7053
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/con1.com/peers/peer0.con1.com/msp:/etc/hyperledger/msp/peer
+        - ./crypto-config/peerOrganizations/con1.com/users:/etc/hyperledger/msp/users
+        - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - orderer.com
+      - couchdb
+    networks:
+      - basic
+
+  couchdb:
+    container_name: couchdb
+    image: ptunstad/fabric-couchdb:arm64-1.4.1
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - 5984:5984
+    networks:
+      - basic
+
+  cli:
+    container_name: cli
+    image: ptunstad/fabric-tools:arm64-1.4.1
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.man1.com:7051
+      - CORE_PEER_LOCALMSPID=Man1MSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/man1.com/users/Admin@man1.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=apelser/fabric-javaenv:arm64-1.4.1
+
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./../chaincode/:/opt/gopath/src/github.com/
+        - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+    networks:
+        - basic
+    depends_on:
+      - orderer.com
+      - peer0.man1.com
+      - peer0.dis1.com
+      - peer0.ret1.com
+      - peer0.con1.com
+      - couchdb

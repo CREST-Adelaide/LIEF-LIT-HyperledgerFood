@@ -1,0 +1,87 @@
+---
+name: food-network
+version: 1.0.0
+client:
+    organization: Man1
+    connection:
+        timeout:
+            peer:
+                endorser: '300'
+            orderer: '300'
+    organization: Dis1
+    connection:
+        timeout:
+            peer:
+                endorser: '300'
+            orderer: '300'
+    organization: Con1
+    connection:
+        timeout:
+            peer:
+                endorser: '300'
+            orderer: '300'
+    organization: Ret1
+    connection:
+        timeout:
+            peer:
+                endorser: '300'
+            orderer: '300'
+channels:
+    mychannel:
+        orderers:
+        - orderer.com
+        peers:
+            peer0.man1.com: {}
+            peer0.dis1.com: {}
+            peer0.ret1.com: {}
+            peer0.con1.com: {}
+organizations:
+    Man1:
+        mspid: Man1MSP
+        peers:
+        - peer0.man1.com
+        certificateAuthorities:
+        - Man1CA
+    Dis1:
+        mspid: Dis1MSP
+        peers:
+        - peer0.dis1.com
+        certificateAuthorities:
+        - Dis1CA
+    Ret1:
+        mspid: Ret1MSP
+        peers:
+        - peer0.ret1.com
+        certificateAuthorities:
+        - Ret1CA
+    Con1:
+        mspid: Con1MSP
+        peers:
+        - peer0.con1.com
+        certificateAuthorities:
+        - Con1CA
+orderers:
+    orderer.com:
+        url: grpc://hfs-NUC8i7HNK:7050
+peers:
+    peer0.man1.com:
+        url: grpc://hfs-NUC8i7HNK:7051
+    peer0.dis1.com:
+        url: grpc://hfs-NUC8i7HNK:8051
+    peer0.ret1.com:
+        url: grpc://mitch-ThinkPad-13:9051
+    peer0.con1.com:
+        url: grpc://raspberrypi_con_node:10051
+certificateAuthorities:
+    Man1CA:
+        url: http://hfs-NUC8i7HNK:7054
+        caName: Man1CA
+    Dis1CA:
+        url: http://hfs-NUC8i7HNK:8054
+        caName: Dis1CA
+    Ret1CA:
+        url: http://hfs-NUC8i7HNK:9054
+        caName: Ret1CA
+    Con1CA:
+        url: http://hfs-NUC8i7HNK:10054
+        caName: Con1CA
