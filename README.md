@@ -12,19 +12,19 @@ The current state of the project is there are four organisations, a manufacturer
 
 Ideally the food supply chain would go as follows; a product is farmed/created at a manufacturer, the manufacturer then puts the product into the system with all the relevant information. The product is bought by a distributor, and when the distributor receives the product it now updates the product with the new details such as location and time. The product is then passed to a retailer who then also updates the product. Lastly the product is sold to a consumer, and a consumer is able to view the history of the product through the supply chain. Viewing where it was made, what distributor and what retailer it was passed to. Also any other information that may be important such as expiry date. 
 
-![[High-Level Use Case.png]]
+![](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/blob/main/docs/diagrams/High-Level%20Use%20Case.png)
 
 The project implements this in a distributed manner. Any organisation can view the products and their history, but only a manufacturer can add an item. Only a distributor and retailer can update product details. These policies are not currently enforced within the endorsement policy and created chaincode but are rather a limitation in the SDK. This functionality is one of the very next steps in development.
 
 ## Use Cases
 
-![[Organisation Use Case.png]]
+![](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/blob/main/docs/diagrams/Organisation%20Use%20Case.png)
 
 The figure above describes the use cases offered by HyperledgerFood. These use cases are implemented as software components within blockchain and software clients operating outside the blockchain. 
 
 ## Components and Deployment
 
-![[Current Deployment.png]]
+![](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/blob/main/docs/diagrams/Current%20Deployment.png)
 
 The HyperledgerFood is a decentralised application that comprises **multiple types of peer nodes**: manufacturer, distributor, retailer, and consumer. Each type of peer node offers functionality suited for one type of food supply chain participant. 
 
@@ -37,7 +37,7 @@ Unlike majority of preexistent blockchain implementation, the blockchain of Hype
 
 ## Activity Flows
 
-![[Transaction Sequence.png]]
+![](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/blob/main/docs/diagrams/Transaction%20Sequence.png)
 
 The life cycle of a life cycle record starts from an information input request from a peer node. In the prototype, the input is captured in form of QR codes attached on food products. 
 
@@ -45,11 +45,11 @@ The information input triggers an SDK within the software of peer node, which in
 
 # Benchmark and Demonstration
 
-![[NUCwithPi.png]]
+![](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/blob/main/docs/performance%20reports/NUCwithPi.png)
 
 The figure above presents the performance and resource consumption level of the HyperledgerFood prototype over a testkit from the Ledger-integrated IoT Testbed at the University of Adelaide. 
 
-Further screen captures and videos are available on [GitHub]()
+Further screen captures and videos are available on [GitHub](https://github.com/CREST-Adelaide/LIEF-LIT-HyperledgerFood/tree/main/docs/videos)
 
 # Instructions
 
@@ -57,15 +57,15 @@ Further screen captures and videos are available on [GitHub]()
 
 The blockchain network is as described above with the four organisations. Following these links will provide a description on how to launch this network. Currently it will only work for the given host names I have provided in the `Machine Information` Wiki page. It is setup to run across 3 physical machines, a laptop, NUC8i7HNK, and a Raspberry Pi. This can all be modifed within the configuration files by simply changing hostnames.
 
-[How To: Install](docs/instructions/installation)
+[How To: Install](docs/instructions/installation.md)
 
-[How To: Run Network](docs/instructions/run_network)
+[How To: Run Network](docs/instructions/run_network.md)
 
 ## QR Code Scanner
 
 This component is used to provide a method to interact with the blockchain network as a user. This component proposes a user to scan a QR code which contains product information. That information will be sent to a server who will act as a middleware for issuing a transaction. That transaction is sent to the endorsing peers and commited to the blockchain. Please see the following documentation for running the Phone app and server for allowing QR code scanning. Also described is how to create your own:
 
-[How to: Run QR Server & Scanner](docs/instructions/qr_server)
+[How to: Run QR Server & Scanner](docs/instructions/qr_server.md)
 
 ## Utilities
 
@@ -73,11 +73,11 @@ This component is used to provide a method to interact with the blockchain netwo
 
 This component is used to provide a visual representation of the blockchain network once it is running. Example screen shots can be seen at the bottom of the `Caliper Performance Results` Wiki page. In order to run this component please view the following documentation:
 
-[How to: Run Blockchain Explorer](docs/instructions/explorer)
+[How to: Run Blockchain Explorer](docs/instructions/explorer.md)
 
 
 ### Hyperledger Caliper
 
 This component is used to provide benchmarking for the described network. This tool is effective at stress testing multiple different blockchain solutions and hence can be applied to Hyperledger Fabric too. Currently it is setup for this network in particular and would require configuration changes to be made if the network is modified. Please see:
 
-[How To: Run Hyperledger Caliper](docs/instructions/caliper)
+[How To: Run Hyperledger Caliper](docs/instructions/caliper.md)
